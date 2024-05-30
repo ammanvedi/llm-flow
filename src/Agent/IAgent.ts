@@ -1,9 +1,15 @@
-type Message =
-    | {role: 'system', message: string}
-    | {role: 'user', message: string}
-    | {role: 'assistant', message: string}
+import OpenAI from "openai";
+import ChatCompletionTool = OpenAI.ChatCompletionTool;
+
+export type Message =
+    | {role: 'system', content: string}
+    | {role: 'user', content: string}
+    | {role: 'assistant', content: string}
+
+export type Tool = ChatCompletionTool
 
 export interface IAgent {
-    getAgentResponse(thread: Message[]): void
-    resetAgent(): void
+    addMessageToThread(message: Message): void
+    getAgentResponse(tools: Tool[]): Promise<string>
+    resetAgent(): Promise<void>
 }

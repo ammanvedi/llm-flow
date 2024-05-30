@@ -1,5 +1,5 @@
 import {IAgent} from "../Agent/IAgent";
 
-export interface IAgentPool {
-    getAgent(name: string): IAgent | null
+export interface IAgentPool<AgentNames extends string> {
+    getAgent(name: AgentNames): IAgent | null
 }

@@ -140,7 +140,7 @@ export const machine = setup({
                     target: "triage",
                 },
             },
-            description: "agent:question_summary\n\nprompt:",
+            description: "agent:summary\n\nprompt:",
         },
     },
 });

@@ -7,5 +7,6 @@ export interface IStateMachine<
     getRequiredAgents(): string[]
     send(event: EventType): void
     onTransition(cb: (state: StateType, context: ContextType) => void): void
+    getAgentForState(stateName: StateType): string
 }
 

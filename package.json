@@ -3,7 +3,13 @@
   "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",
+  "scripts": {
+    "start": "ts-node src/index.ts"
+  },
   "dependencies": {
+    "dotenv": "^16.4.5",
+    "openai": "^4.47.2",
+    "ts-node": "^10.9.2",
     "typescript": "^5.4.5",
     "xstate": "^5.13.0"
   }

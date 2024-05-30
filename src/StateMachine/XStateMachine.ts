@@ -1,5 +1,6 @@
 import {IStateMachine} from "./IStateMachine";
 import {StateMachine, EventFromLogic, createActor, Actor, SnapshotFrom} from "xstate";
+import {machine} from "../machine";
 
 type AnyMachine = StateMachine<any, any, any, any, any, any, any, any, any, any, any>
 
@@ -30,5 +31,16 @@ export class XStateMachine<
         this.actor.subscribe((snapshot: SnapshotFrom<AnyMachine>) => {
             cb(snapshot.value, snapshot.context)
         })
+        const initialSnapshot: SnapshotFrom<AnyMachine> = this.actor.getSnapshot()
+        cb(initialSnapshot.value, initialSnapshot.context)
+    }
+
+    // todo allow null
+    getAgentForState(stateName: StateType): string {
+        const state = this.machine.states[stateName as string]
+        // todo do this less shittily with a regex
+        const agent = state.config.description?.split('\n')[0].split(':')[1]
+        console.log(agent)
+        return agent || '';
     }
 }
