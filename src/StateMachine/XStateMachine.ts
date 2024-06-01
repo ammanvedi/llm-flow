@@ -1,6 +1,7 @@
 import {IStateMachine} from "./IStateMachine";
-import {StateMachine, EventFromLogic, createActor, Actor, SnapshotFrom} from "xstate";
+import {StateMachine, EventFromLogic, createActor, Actor, SnapshotFrom, interpret} from "xstate";
 import {machine} from "../machine";
+import {Tool} from "../Agent/IAgent";
 
 type AnyMachine = StateMachine<any, any, any, any, any, any, any, any, any, any, any>
 
@@ -24,6 +25,7 @@ export class XStateMachine<
     }
 
     send(event: EventType): void {
+        console.log('sending', event)
         this.actor.send(event)
     }
 
@@ -35,12 +37,60 @@ export class XStateMachine<
         cb(initialSnapshot.value, initialSnapshot.context)
     }
 
-    // todo allow null
+    // todo allow nulls
     getAgentForState(stateName: StateType): string {
         const state = this.machine.states[stateName as string]
         // todo do this less shittily with a regex
         const agent = state.config.description?.split('\n')[0].split(':')[1]
-        console.log(agent)
         return agent || '';
     }
+
+    getCurrentState(): StateType {
+        const snapshot: SnapshotFrom<AnyMachine> = this.actor.getSnapshot()
+        return snapshot.value
+    }
+
+    getAvailableToolsForState(state: StateType): Tool[] {
+        return [
+            {
+                type: 'function',
+                function: {
+                    name: 'sendEvent',
+                    parameters: {
+                        type: 'object',
+                        properties: {
+                            type: {
+                                type: 'string'
+                            }
+                        },
+                        required: ["type"],
+                    }
+                }
+            },
+            {
+                type: 'function',
+                function: {
+                    name: 'updateContext',
+                    parameters: {
+                        type: 'object',
+                        properties: {
+                            key: {
+                                type: 'string'
+                            },
+                            value: {
+                                type: 'string'
+                            }
+                        },
+                        required: ["key", "value"],
+                    }
+                }
+            }
+        ]
+    }
+
+    updateContext(params: { key: string; value: string }): void {
+        // todo implement this via an event?
+        console.log('updating context', params)
+    }
+
 }

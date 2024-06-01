@@ -1,9 +1,12 @@
-import { setup } from "xstate";
+import {EventFromLogic, setup} from "xstate";
+
+type X = EventFromLogic<typeof machine>
 
 export const machine = setup({
     types: {
         context: {} as {
-            hi: string
+            firstName?: string,
+            email?: string
         },
         events: {} as
             | { type: "done" }
@@ -15,7 +18,6 @@ export const machine = setup({
     },
 }).createMachine({
     context: {
-        hi: ''
     },
     id: "Root Machine",
     initial: "onboarding",

@@ -1,4 +1,4 @@
-import {IAgent, Message, Tool} from "./IAgent";
+import {HandleToolCalls, IAgent, Message, Tool} from "./IAgent";
 import OpenAI from "openai";
 
 export class GPTAgent implements IAgent {
@@ -7,6 +7,10 @@ export class GPTAgent implements IAgent {
         {
             role: 'system',
             content: this.baseSystemPrompt
+        },
+        {
+            role: 'user',
+            content: '__START__'
         }
     ]
 
@@ -16,20 +20,50 @@ export class GPTAgent implements IAgent {
     ) {
     }
 
-    async getAgentResponse(tools: Tool[]) {
+    async getAgentResponse(tools: Tool[], onToolCalls: HandleToolCalls): Promise<string> {
+
         const completion = await this.openAI.chat.completions.create({
             messages: this.thread,
             model: "gpt-4o",
             tools
         });
 
-        return completion.choices[0].message.content || ''
+        const responseMessage = completion.choices[0].message
+
+        this.addMessageToThread(responseMessage)
+
+        if(responseMessage.tool_calls) {
+            const toolCallResults = await onToolCalls(responseMessage.tool_calls)
+
+            toolCallResults.forEach(this.addMessageToThread.bind(this))
+
+            return this.getAgentResponse(tools, onToolCalls)
+        }
+
+        const response = responseMessage.content
+
+        return response || ''
     }
 
     async resetAgent() {
+        this.thread = []
     }
 
     addMessageToThread(message: Message): void {
         this.thread.push(message)
+    }
+
+    addAgentMessageToThread(message: string): void {
+        this.thread.push({
+            role: 'assistant',
+            content: message
+        })
+    }
+
+    addUserMessageToThread(message: string): void {
+        this.thread.push({
+            role: 'user',
+            content: message
+        })
     }
 }
