@@ -21,12 +21,12 @@ const agentPool = new AgentPool<
      */
     string
 >(new Map([
-    ['onboarding', new GPTAgent(prompts.onboardingAgent.baseSystemPrompt, openai)],
-    ['triage', new GPTAgent(prompts.baseAgentPrompt, openai)],
-    ['content_video', new GPTAgent(prompts.baseAgentPrompt, openai)],
-    ['question_exercise', new GPTAgent(prompts.baseAgentPrompt, openai)],
-    ['roleplay', new GPTAgent(prompts.baseAgentPrompt, openai)],
-    ['summary', new GPTAgent(prompts.baseAgentPrompt, openai)],
+    ['onboarding', new GPTAgent(prompts.onboardingAgent.baseSystemPrompt, openai, 'onboarding')],
+    ['triage', new GPTAgent(prompts.triageAgent.baseSystemPrompt, openai, 'triage')],
+    ['content_video', new GPTAgent(prompts.contentVideoAgent.baseSystemPrompt, openai, 'content_video')],
+    ['question_exercise', new GPTAgent(prompts.contentQuestionAgent.baseSystemPrompt, openai, 'question_exercise')],
+    ['roleplay', new GPTAgent(prompts.rolePlayAgent.baseSystemPrompt, openai, 'roleplay')],
+    ['summary', new GPTAgent(prompts.summaryAgent.baseSystemPrompt, openai, 'summary')],
 ]))
 
 

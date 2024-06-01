@@ -5,12 +5,12 @@ export enum Speaker {
 }
 
 export type ConversationMessage =
-    | {role: Speaker.Agent, content: string}
+    | {role: Speaker.Agent, agentName: string, content: string}
     | {role: Speaker.User, content: string}
 
 export type ConversationThread = ConversationMessage[]
 
-type SpeakerRequestHandler = (speaker: Speaker, thread: ConversationThread) => Promise<string>
+type SpeakerRequestHandler = (speaker: Speaker, thread: ConversationThread) => Promise<{message: string | null, agentName: string }>
 
 /**
  * Models a conversation between one agent (which may be made up of multiple aggregates in implementation)
@@ -33,14 +33,19 @@ export class Conversation {
         const _self = this
 
         setTimeout(() => {
+            _self.onRequestSpeakerResponse(_self.currentSpeaker, _self.thread).then(({message, agentName}) => {
+                if(message) {
+                    _self.addMessageToThread(_self.currentSpeaker === Speaker.User ? {
+                        role: _self.currentSpeaker,
+                        content: message
+                    } : {
+                        role: _self.currentSpeaker,
+                        agentName,
+                        content: message
+                    });
 
-            _self.onRequestSpeakerResponse(_self.currentSpeaker, _self.thread).then(message => {
-                _self.addMessageToThread({
-                    role: _self.currentSpeaker,
-                    content: message
-                });
-
-                _self.currentSpeaker = _self.getNextSpeaker()
+                    _self.currentSpeaker = _self.getNextSpeaker()
+                }
 
                 _self.advanceConversation()
             })
@@ -56,5 +61,23 @@ export class Conversation {
 
     private getNextSpeaker(): Speaker {
         return this.currentSpeaker === Speaker.User ? Speaker.Agent : Speaker.User
+    }
+
+    summariseConversationForAgent(): string {
+        // todo move to prompts
+        return `
+            To help you with your task here is the conversation so far
+            between the user and the system that you are part of
+            
+            in this conversation entries marked with "agent (<NAME>)" come from the system
+            
+            NAME tells you which agent gave this response which might be helpful
+            when determining which other agent to ask when you need help.
+            
+            ${this.thread.map(msg => {
+                const speaker = msg.role === Speaker.User ? 'user' : `agent ${msg.agentName}`
+                return `${speaker} : ${msg.content}`
+            }).join('\n')}
+        `
     }
 }

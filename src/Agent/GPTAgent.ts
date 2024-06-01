@@ -1,13 +1,19 @@
-import {HandleToolCalls, IAgent, Message, Tool} from "./IAgent";
+import {HandleToolCalls, IAgent, InjectedSystemPrompt, Message, Tool} from "./IAgent";
 import OpenAI from "openai";
 
 export class GPTAgent implements IAgent {
+
+    private readonly injectedSystemPrompt: InjectedSystemPrompt = {
+        role: 'system_injected',
+        content: ''
+    }
 
     private thread: Message[] = [
         {
             role: 'system',
             content: this.baseSystemPrompt
         },
+        this.injectedSystemPrompt,
         {
             role: 'user',
             content: '__START__'
@@ -16,14 +22,24 @@ export class GPTAgent implements IAgent {
 
     constructor(
         private readonly baseSystemPrompt: string,
-        private readonly openAI: OpenAI
+        private readonly openAI: OpenAI,
+        private readonly name: string
     ) {
     }
 
     async getAgentResponse(tools: Tool[], onToolCalls: HandleToolCalls): Promise<string> {
 
         const completion = await this.openAI.chat.completions.create({
-            messages: this.thread,
+            messages: this.thread.map(msg => {
+                if(msg.role === 'system_injected') {
+                    return {
+                        role: 'system',
+                        content: msg.content
+                    }
+                }
+
+                return msg
+            }),
             model: "gpt-4o",
             tools
         });
@@ -37,6 +53,11 @@ export class GPTAgent implements IAgent {
 
             toolCallResults.forEach(this.addMessageToThread.bind(this))
 
+            /**
+             * only do this if we aren't going to call the done function
+             * this can be determined by return type of tool call results
+             * which could prevent this behaviour
+             */
             return this.getAgentResponse(tools, onToolCalls)
         }
 
@@ -65,5 +86,13 @@ export class GPTAgent implements IAgent {
             role: 'user',
             content: message
         })
+    }
+
+    updateInjectedSystemPrompt(message: string): void {
+        this.injectedSystemPrompt.content = message
+    }
+
+    getName(): string {
+        return this.name;
     }
 }

@@ -1,6 +1,5 @@
 import {IStateMachine} from "./IStateMachine";
 import {StateMachine, EventFromLogic, createActor, Actor, SnapshotFrom, interpret} from "xstate";
-import {machine} from "../machine";
 import {Tool} from "../Agent/IAgent";
 
 type AnyMachine = StateMachine<any, any, any, any, any, any, any, any, any, any, any>
@@ -18,6 +17,7 @@ export class XStateMachine<
     constructor(machine: Machine) {
         this.machine = machine
         this.actor = createActor(this.machine)
+        this.actor.start()
     }
 
     getRequiredAgents(): string[] {
@@ -25,7 +25,6 @@ export class XStateMachine<
     }
 
     send(event: EventType): void {
-        console.log('sending', event)
         this.actor.send(event)
     }
 
@@ -52,6 +51,24 @@ export class XStateMachine<
 
     getAvailableToolsForState(state: StateType): Tool[] {
         return [
+            {
+                type: 'function',
+                function: {
+                    name: 'askAgent',
+                    parameters: {
+                        type: 'object',
+                        properties: {
+                            agentName: {
+                                type: 'string'
+                            },
+                            query: {
+                                type: 'string'
+                            }
+                        },
+                        required: ["query", "agentName"],
+                    }
+                }
+            },
             {
                 type: 'function',
                 function: {
